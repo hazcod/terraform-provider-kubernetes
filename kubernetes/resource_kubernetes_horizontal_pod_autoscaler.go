@@ -36,6 +36,12 @@ func resourceKubernetesHorizontalPodAutoscaler() *schema.Resource {
 							Description: "Upper limit for the number of pods that can be set by the autoscaler.",
 							Required:    true,
 						},
+						"metric": {
+							Type:        schema.TypeList,
+							Optional:    true,
+							Description: "The specifications for which to use to calculate the desired replica count (the maximum replica count across all metrics will be used). The desired replica count is calculated multiplying the ratio between the target value and the current value by the current number of pods. Ergo, metrics used must decrease as the pod count is increased, and vice-versa. See the individual metric source types for more information about how each type of metric must respond. If not set, the default metric will be set to 80% average CPU utilization.",
+							Elem:        metricSpecFields(),
+						},
 						"min_replicas": {
 							Type:        schema.TypeInt,
 							Description: "Lower limit for the number of pods that can be set by the autoscaler, defaults to `1`.",
@@ -45,7 +51,7 @@ func resourceKubernetesHorizontalPodAutoscaler() *schema.Resource {
 						"scale_target_ref": {
 							Type:        schema.TypeList,
 							Description: "Reference to scaled resource. e.g. Replication Controller",
-							Required:    true,
+							Optional:    true,
 							MaxItems:    1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
