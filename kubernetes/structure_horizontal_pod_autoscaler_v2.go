@@ -52,18 +52,21 @@ func expandV2MetricTarget(m map[string]interface{}) autoscalingv2beta2.MetricTar
 		target.Type = autoscalingv2beta2.MetricTargetType(v)
 	}
 
-	if v, ok := m["average_utilization"].(int); ok && v > 0 {
-		target.AverageUtilization = ptrToInt32(int32(v))
-	}
-
-	if v, ok := m["average_value"].(string); ok && v != "" {
-		q := resource.MustParse(v)
-		target.AverageValue = &q
-	}
-
-	if v, ok := m["value"].(string); ok && v != "" {
-		q := resource.MustParse(v)
-		target.Value = &q
+	switch target.Type {
+	case autoscalingv2beta2.AverageValueMetricType:
+		if v, ok := m["average_value"].(string); ok && v != "0" && v != "" {
+			q := resource.MustParse(v)
+			target.AverageValue = &q
+		}
+	case autoscalingv2beta2.UtilizationMetricType:
+		if v, ok := m["average_utilization"].(int); ok && v > 0 {
+			target.AverageUtilization = ptrToInt32(int32(v))
+		}
+	case autoscalingv2beta2.ValueMetricType:
+		if v, ok := m["value"].(string); ok && v != "0" && v != "" {
+			q := resource.MustParse(v)
+			target.Value = &q
+		}
 	}
 
 	return target
@@ -169,11 +172,12 @@ func expandV2MetricSpec(m map[string]interface{}) (autoscalingv2beta2.MetricSpec
 }
 
 func expandV2CrossVersionObjectReference(in []interface{}) autoscalingv2beta2.CrossVersionObjectReference {
+	ref := autoscalingv2beta2.CrossVersionObjectReference{}
+
 	if len(in) == 0 || in[0] == nil {
-		return autoscalingv2beta2.CrossVersionObjectReference{}
+		return ref
 	}
 
-	ref := autoscalingv2beta2.CrossVersionObjectReference{}
 	m := in[0].(map[string]interface{})
 
 	if v, ok := m["api_version"]; ok {
@@ -195,16 +199,13 @@ func flattenV2MetricTarget(target autoscalingv2beta2.MetricTarget) []interface{}
 		"type": target.Type,
 	}
 
-	if target.AverageValue != nil {
+	switch target.Type {
+	case autoscalingv2beta2.AverageValueMetricType:
 		m["average_value"] = target.AverageValue.String()
-	}
-
-	if target.AverageUtilization != nil {
+	case autoscalingv2beta2.UtilizationMetricType:
 		m["average_utilization"] = *target.AverageUtilization
-	}
-
-	if target.Value != nil {
-		m["value"] = target.AverageValue.String()
+	case autoscalingv2beta2.ValueMetricType:
+		m["value"] = target.Value.String()
 	}
 
 	return []interface{}{m}
@@ -273,7 +274,7 @@ func flattenV2MetricSpec(spec autoscalingv2beta2.MetricSpec) map[string]interfac
 	}
 
 	if spec.Object != nil {
-		m["pods"] = flattenV2ObjectMetricSource(spec.Object)
+		m["object"] = flattenV2ObjectMetricSource(spec.Object)
 	}
 
 	return m
