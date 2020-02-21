@@ -51,7 +51,7 @@ func resourceKubernetesHorizontalPodAutoscaler() *schema.Resource {
 						"scale_target_ref": {
 							Type:        schema.TypeList,
 							Description: "Reference to scaled resource. e.g. Replication Controller",
-							Optional:    true,
+							Required:    true,
 							MaxItems:    1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
