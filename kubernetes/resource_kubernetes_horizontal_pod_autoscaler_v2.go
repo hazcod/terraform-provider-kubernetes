@@ -75,7 +75,7 @@ func resourceKubernetesHorizontalPodAutoscalerV2Update(d *schema.ResourceData, m
 
 	ops := patchMetadata("metadata.0.", "/metadata/", d)
 	if d.HasChange("spec") {
-		diffOps := patchHorizontalPodAutoscalerSpec("spec.0.", "/spec", d)
+		diffOps := patchHorizontalPodAutoscalerV2Spec("spec.0.", "/spec", d)
 		ops = append(ops, diffOps...)
 	}
 	data, err := ops.MarshalJSON()

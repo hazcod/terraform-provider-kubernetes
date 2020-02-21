@@ -4,7 +4,6 @@ import (
 	"fmt"
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"github.com/pkg/errors"
 	autoscalingv2beta2 "k8s.io/api/autoscaling/v2beta2"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
@@ -31,18 +30,20 @@ func expandHorizontalPodAutoscalerV2Spec(in []interface{}) (*autoscalingv2beta2.
 	}
 
 	if v, ok := m["metric"].([]interface{}); ok {
-		spec.Metrics = []autoscalingv2beta2.MetricSpec{}
-		for _, m := range v {
-			metricSpec, err := expandV2MetricSpec(m.(map[string]interface{}))
-			if err != nil {
-				return nil, errors.Wrap(err, "failed to expand metric spec")
-			}
-
-			spec.Metrics = append(spec.Metrics, metricSpec)
-		}
+		spec.Metrics = expandV2Metrics(v)
 	}
 
 	return spec, nil
+}
+
+func expandV2Metrics(in []interface{}) []autoscalingv2beta2.MetricSpec {
+	metrics := []autoscalingv2beta2.MetricSpec{}
+
+	for _, m := range in {
+		metrics = append(metrics, expandV2MetricSpec(m.(map[string]interface{})))
+	}
+
+	return metrics
 }
 
 func expandV2MetricTarget(m map[string]interface{}) autoscalingv2beta2.MetricTarget {
@@ -143,14 +144,12 @@ func expandV2ObjectMetricSource(m map[string]interface{}) *autoscalingv2beta2.Ob
 	return source
 }
 
-func expandV2MetricSpec(m map[string]interface{}) (autoscalingv2beta2.MetricSpec, error) {
-	metricType, ok := m["type"].(string)
-	if !ok {
-		return autoscalingv2beta2.MetricSpec{}, fmt.Errorf("metric must have a type")
-	}
-
+func expandV2MetricSpec(m map[string]interface{}) autoscalingv2beta2.MetricSpec {
 	spec := autoscalingv2beta2.MetricSpec{}
-	spec.Type = autoscalingv2beta2.MetricSourceType(metricType)
+
+	if v, ok := m["type"].(string); ok {
+		spec.Type = autoscalingv2beta2.MetricSourceType(v)
+	}
 
 	if v, ok := m["resource"].([]interface{}); ok && len(v) == 1 {
 		spec.Resource = expandV2ResourceMetricSource(v[0].(map[string]interface{}))
@@ -168,7 +167,7 @@ func expandV2MetricSpec(m map[string]interface{}) (autoscalingv2beta2.MetricSpec
 		spec.Object = expandV2ObjectMetricSource(v[0].(map[string]interface{}))
 	}
 
-	return spec, nil
+	return spec
 }
 
 func expandV2CrossVersionObjectReference(in []interface{}) autoscalingv2beta2.CrossVersionObjectReference {
@@ -332,6 +331,20 @@ func patchHorizontalPodAutoscalerV2Spec(prefix string, pathPrefix string, d *sch
 		ops = append(ops, &ReplaceOperation{
 			Path:  pathPrefix + "/minReplicas",
 			Value: d.Get(prefix + "min_replicas").(int),
+		})
+	}
+
+	if d.HasChange(prefix + "scale_target_ref") {
+		ops = append(ops, &ReplaceOperation{
+			Path:  pathPrefix + "/scaleTargetRef",
+			Value: expandCrossVersionObjectReference(d.Get(prefix + "scale_target_ref").([]interface{})),
+		})
+	}
+
+	if d.HasChange(prefix + "metric") {
+		ops = append(ops, &ReplaceOperation{
+			Path:  pathPrefix + "/metrics",
+			Value: expandV2Metrics(d.Get(prefix + "metric").([]interface{})),
 		})
 	}
 
