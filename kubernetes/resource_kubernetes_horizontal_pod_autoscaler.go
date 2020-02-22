@@ -21,7 +21,6 @@ func resourceKubernetesHorizontalPodAutoscaler() *schema.Resource {
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
-
 		Schema: map[string]*schema.Schema{
 			"metadata": namespacedMetadataSchema("horizontal pod autoscaler", true),
 			"spec": {
@@ -127,18 +126,24 @@ func resourceKubernetesHorizontalPodAutoscalerRead(d *schema.ResourceData, meta 
 		return err
 	}
 	log.Printf("[INFO] Reading horizontal pod autoscaler %s", name)
-	svc, err := conn.AutoscalingV1().HorizontalPodAutoscalers(namespace).Get(name, meta_v1.GetOptions{})
+	hpa, err := conn.AutoscalingV1().HorizontalPodAutoscalers(namespace).Get(name, meta_v1.GetOptions{})
 	if err != nil {
 		log.Printf("[DEBUG] Received error: %#v", err)
 		return err
 	}
-	log.Printf("[INFO] Received horizontal pod autoscaler: %#v", svc)
-	err = d.Set("metadata", flattenMetadata(svc.ObjectMeta, d))
+
+	// NOTE: this is needed for import
+	if _, exists := hpa.ObjectMeta.GetAnnotations()["autoscaling.alpha.kubernetes.io/metrics"]; exists {
+		return resourceKubernetesHorizontalPodAutoscalerV2Read(d, meta)
+	}
+
+	log.Printf("[INFO] Received horizontal pod autoscaler: %#v", hpa)
+	err = d.Set("metadata", flattenMetadata(hpa.ObjectMeta, d))
 	if err != nil {
 		return err
 	}
 
-	flattened := flattenHorizontalPodAutoscalerSpec(svc.Spec)
+	flattened := flattenHorizontalPodAutoscalerSpec(hpa.Spec)
 	log.Printf("[DEBUG] Flattened horizontal pod autoscaler spec: %#v", flattened)
 	err = d.Set("spec", flattened)
 	if err != nil {

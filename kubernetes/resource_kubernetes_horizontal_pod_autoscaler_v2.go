@@ -20,12 +20,12 @@ func resourceKubernetesHorizontalPodAutoscalerV2Create(d *schema.ResourceData, m
 		return err
 	}
 
-	svc := autoscalingv2beta2.HorizontalPodAutoscaler{
+	hpa := autoscalingv2beta2.HorizontalPodAutoscaler{
 		ObjectMeta: metadata,
 		Spec:       *spec,
 	}
-	log.Printf("[INFO] Creating new horizontal pod autoscaler: %#v", svc)
-	out, err := conn.AutoscalingV2beta2().HorizontalPodAutoscalers(metadata.Namespace).Create(&svc)
+	log.Printf("[INFO] Creating new horizontal pod autoscaler: %#v", hpa)
+	out, err := conn.AutoscalingV2beta2().HorizontalPodAutoscalers(metadata.Namespace).Create(&hpa)
 	if err != nil {
 		return err
 	}
@@ -44,18 +44,18 @@ func resourceKubernetesHorizontalPodAutoscalerV2Read(d *schema.ResourceData, met
 		return err
 	}
 	log.Printf("[INFO] Reading horizontal pod autoscaler %s", name)
-	svc, err := conn.AutoscalingV2beta2().HorizontalPodAutoscalers(namespace).Get(name, metav1.GetOptions{})
+	hpa, err := conn.AutoscalingV2beta2().HorizontalPodAutoscalers(namespace).Get(name, metav1.GetOptions{})
 	if err != nil {
 		log.Printf("[DEBUG] Received error: %#v", err)
 		return err
 	}
-	log.Printf("[INFO] Received horizontal pod autoscaler: %#v", svc)
-	err = d.Set("metadata", flattenMetadata(svc.ObjectMeta, d))
+	log.Printf("[INFO] Received horizontal pod autoscaler: %#v", hpa)
+	err = d.Set("metadata", flattenMetadata(hpa.ObjectMeta, d))
 	if err != nil {
 		return err
 	}
 
-	flattened := flattenHorizontalPodAutoscalerV2Spec(svc.Spec)
+	flattened := flattenHorizontalPodAutoscalerV2Spec(hpa.Spec)
 	log.Printf("[DEBUG] Flattened horizontal pod autoscaler spec: %#v", flattened)
 	err = d.Set("spec", flattened)
 	if err != nil {
