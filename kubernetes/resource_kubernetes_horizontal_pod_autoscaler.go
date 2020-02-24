@@ -86,7 +86,7 @@ func resourceKubernetesHorizontalPodAutoscaler() *schema.Resource {
 }
 
 func resourceKubernetesHorizontalPodAutoscalerCreate(d *schema.ResourceData, meta interface{}) error {
-	if useV2beta2(d) {
+	if useV2(d) {
 		return resourceKubernetesHorizontalPodAutoscalerV2Create(d, meta)
 	}
 
@@ -115,7 +115,7 @@ func resourceKubernetesHorizontalPodAutoscalerCreate(d *schema.ResourceData, met
 }
 
 func resourceKubernetesHorizontalPodAutoscalerRead(d *schema.ResourceData, meta interface{}) error {
-	if useV2beta2(d) {
+	if useV2(d) {
 		return resourceKubernetesHorizontalPodAutoscalerV2Read(d, meta)
 	}
 
@@ -154,7 +154,7 @@ func resourceKubernetesHorizontalPodAutoscalerRead(d *schema.ResourceData, meta 
 }
 
 func resourceKubernetesHorizontalPodAutoscalerUpdate(d *schema.ResourceData, meta interface{}) error {
-	if useV2beta2(d) {
+	if useV2(d) {
 		return resourceKubernetesHorizontalPodAutoscalerV2Update(d, meta)
 	}
 
@@ -186,7 +186,7 @@ func resourceKubernetesHorizontalPodAutoscalerUpdate(d *schema.ResourceData, met
 }
 
 func resourceKubernetesHorizontalPodAutoscalerDelete(d *schema.ResourceData, meta interface{}) error {
-	if useV2beta2(d) {
+	if useV2(d) {
 		return resourceKubernetesHorizontalPodAutoscalerV2Delete(d, meta)
 	}
 
@@ -209,7 +209,7 @@ func resourceKubernetesHorizontalPodAutoscalerDelete(d *schema.ResourceData, met
 }
 
 func resourceKubernetesHorizontalPodAutoscalerExists(d *schema.ResourceData, meta interface{}) (bool, error) {
-	if useV2beta2(d) {
+	if useV2(d) {
 		return resourceKubernetesHorizontalPodAutoscalerV2Exists(d, meta)
 	}
 
@@ -231,7 +231,7 @@ func resourceKubernetesHorizontalPodAutoscalerExists(d *schema.ResourceData, met
 	return true, err
 }
 
-func useV2beta2(d *schema.ResourceData) bool {
+func useV2(d *schema.ResourceData) bool {
 	if len(d.Get("spec.0.metric").([]interface{})) > 0 {
 		log.Printf("[INFO] Using autoscaling/v2beta2 because this resource has a metric field")
 		return true
