@@ -157,133 +157,133 @@ func testAccCheckKubernetesHorizontalPodAutoscalerV2Exists(n string) resource.Te
 
 func testAccKubernetesHorizontalPodAutoscalerV2Config_basic(name string) string {
 	return fmt.Sprintf(`
-	resource "kubernetes_horizontal_pod_autoscaler" "test" {
-		metadata {
-			name = %q
+resource "kubernetes_horizontal_pod_autoscaler" "test" {
+  metadata {
+    name = %q
 
-			annotations = {
-				test = "test"
-			}
-	
-			labels = {
-				test = "test"
-			}
-		}
-	
-		spec {
-			max_replicas = 10
-	
-			scale_target_ref {
-				kind = "Deployment"
-				name = "TerraformAccTest"
-			}
-			
-			metric {
-				type = "Resource"
-				resource {
-					 name = "test"
-					 target {
-							type = "Utilization"
-							average_utilization = 1
-					 } 
-				}
-			}
-	
-			metric {
-				 type = "External"
-				 external {
-						metric {
-							 name = "queue_size"
-							 selector {
-									match_labels = {
-										 queue_name = "test"
-									}
-							 }
-						}
-						target {
-							type = "Value"
-							 value = "10"
-						}
-				 }
-			}
-			
-			metric {
-				type = "Pods"
-				pods {
-					 metric {
-						name = "packets-per-second"
-					 }
-					 target {
-							type = "AverageValue"
-							average_value = "1k"
-					 }
-				}
-			}
-			
-			metric {
-				type = "Object"
-				object {
-					 metric {
-							name = "requests-per-second"
-					 }
-					 described_object {
-						 kind = "Ingress"
-						 name = "main-route"
-						 api_version = "networking.k8s.io/v1beta1"
-					 }
-					 target {
-							type = "AverageValue"
-							average_value = "2k"
-					 }
-				}
-			}
-		}
-	}
+    annotations = {
+      test = "test"
+    }
+
+    labels = {
+      test = "test"
+    }
+  }
+
+  spec {
+    max_replicas = 10
+
+    scale_target_ref {
+      kind = "Deployment"
+      name = "TerraformAccTest"
+    }
+
+    metric {
+      type = "Resource"
+      resource {
+        name = "test"
+        target {
+          type                = "Utilization"
+          average_utilization = 1
+        }
+      }
+    }
+
+    metric {
+      type = "External"
+      external {
+        metric {
+          name = "queue_size"
+          selector {
+            match_labels = {
+              queue_name = "test"
+            }
+          }
+        }
+        target {
+          type  = "Value"
+          value = "10"
+        }
+      }
+    }
+
+    metric {
+      type = "Pods"
+      pods {
+        metric {
+          name = "packets-per-second"
+        }
+        target {
+          type          = "AverageValue"
+          average_value = "1k"
+        }
+      }
+    }
+
+    metric {
+      type = "Object"
+      object {
+        metric {
+          name = "requests-per-second"
+        }
+        described_object {
+          kind        = "Ingress"
+          name        = "main-route"
+          api_version = "networking.k8s.io/v1beta1"
+        }
+        target {
+          type          = "AverageValue"
+          average_value = "2k"
+        }
+      }
+    }
+  }
+}
 `, name)
 }
 
 func testAccKubernetesHorizontalPodAutoscalerV2Config_modified(name string) string {
 	return fmt.Sprintf(`
-	resource "kubernetes_horizontal_pod_autoscaler" "test" {
-		metadata {
-			name = %q
+resource "kubernetes_horizontal_pod_autoscaler" "test" {
+  metadata {
+    name = %q
 
-			annotations = {
-				test = "test"
-			}
-	
-			labels = {
-				test = "test"
-			}
-		}
-	
-		spec {
-			min_replicas = 50
-			max_replicas = 100
-	
-			scale_target_ref {
-				kind = "Deployment"
-				name = "TerraformAccTest"
-			}
-			
-			metric {
-				 type = "External"
-				 external {
-						metric {
-							 name = "latency"
-							 selector {
-									match_labels = {
-										 lb_name = "test"
-									}
-							 }
-						}
-						target {
-							type = "Value"
-							value = "100"
-						}
-				 }
-			}
-		}
-	}
+    annotations = {
+      test = "test"
+    }
+
+    labels = {
+      test = "test"
+    }
+  }
+
+  spec {
+    min_replicas = 50
+    max_replicas = 100
+
+    scale_target_ref {
+      kind = "Deployment"
+      name = "TerraformAccTest"
+    }
+
+    metric {
+      type = "External"
+      external {
+        metric {
+          name = "latency"
+          selector {
+            match_labels = {
+              lb_name = "test"
+            }
+          }
+        }
+        target {
+          type  = "Value"
+          value = "100"
+        }
+      }
+    }
+  }
+}
 `, name)
 }
